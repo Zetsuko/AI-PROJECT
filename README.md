@@ -2,7 +2,7 @@
 
 ### Dentro de la carpeta donde este el proyecto crear un entorno virtual:
 ```
-Windows: python -m vevn .venv
+Windows: python -m venv .venv
 Unix/macOS: python3 -m venv .venv
 ```
 >_**Un entorno virtual permite instalar las dependencias en un entorno aparte de nuestra computadora**_
