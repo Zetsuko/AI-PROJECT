@@ -1,166 +1,187 @@
 import pygame
 import random
-import time
+import heapq  # Para el algoritmo A*
 
-from assets import *
-
+from assets import *  # Asegúrate de que esto incluya las imágenes para blackSquare y whiteSquare
 
 pygame.init()
 running = True
-dt = 0
 clock = pygame.time.Clock()
 
-#DIMENSIONS OF THE WINDOW
-WIDTH, HEIGHT = 1000, 800  # Ancho para incluir el panel lateral
-PANEL_WIDTH = 200  # Espacio a la derecha para mostrar el contador
+# DIMENSIONES DE LA VENTANA
+WIDTH, HEIGHT = 1080, 800  # Extiende el ancho para añadir el área de información
 
-#COLOURS
+# COLORES
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
 BACKGROUND = (200, 200, 200)
-BORDER = (100, 100, 100)
-PANEL_COLOR = (220, 220, 220)
+TEXT_COLOR = (50, 50, 50)
 
-blockSize = 40  # Tamaño de los bloques
-font = pygame.font.SysFont(None, 48)  # Definir la fuente para el texto
+blockSize = 80
 
-# Contador de esferas recogidas
-balls_collected = 0
+# Fuente para mostrar información
+font = pygame.font.SysFont(None, 24)
 
-# Generar un mapa con un pasillo principal y salas a los lados
-def generate_hospital_map(rows, cols):
-    new_map = [[1 for _ in range(cols)] for _ in range(rows)]  # Lleno de paredes inicialmente
-
-    # Crear el pasillo principal de al menos 3 de ancho
-    main_corridor_y = rows // 2 - 1  # Posición vertical del pasillo principal (centrado)
-    for y in range(main_corridor_y, main_corridor_y + 3):  # Pasillo de 3 bloques de ancho
-        for x in range(cols):
-            new_map[y][x] = 0
-
-    # Crear salas a los lados del pasillo principal y conectarlas
-    rooms = []
-    def create_room(x, y, width, height):
-        for i in range(y, y + height):
-            for j in range(x, x + width):
-                if 0 < i < rows and 0 < j < cols:  # Asegurarse de que la sala esté dentro de los límites
-                    new_map[i][j] = 0
-
-    # Generar varias salas en los lados del pasillo
-    room_width, room_height = 5, 5  # Tamaño estándar de las salas
-
-    # Lado izquierdo del pasillo
-    rooms.append((1, main_corridor_y - room_height - 1, room_width, room_height))  # Sala 1
-    rooms.append((1, main_corridor_y + 3 + 1, room_width, room_height))  # Sala 2
-    rooms.append((10, main_corridor_y - room_height - 1, room_width, room_height))  # Sala 3
-    rooms.append((10, main_corridor_y + 3 + 1, room_width, room_height))  # Sala 4
-
-    # Lado derecho del pasillo
-    rooms.append((cols - room_width - 1, main_corridor_y - room_height - 1, room_width, room_height))  # Sala 5
-    rooms.append((cols - room_width - 1, main_corridor_y + 3 + 1, room_width, room_height))  # Sala 6
-    rooms.append((cols - room_width - 1 - 9, main_corridor_y - room_height - 1, room_width, room_height))  # Sala 7
-    rooms.append((cols - room_width - 1 - 9, main_corridor_y + 3 + 1, room_width, room_height))  # Sala 8
-
-    for room in rooms:
-        create_room(*room)
-
-    # Conectar las salas al pasillo principal
-    for x in range(cols):
-        if new_map[main_corridor_y - 1][x] == 0:  # Si hay un pasillo en la fila superior del pasillo principal
-            for room in rooms:
-                room_x, room_y, room_width, room_height = room
-                if room_x < x < room_x + room_width and room_y <= main_corridor_y - 1 < room_y + room_height:
-                    new_map[room_y + room_height][x] = 0  # Conectar el pasillo debajo de la sala
-        if new_map[main_corridor_y + 3][x] == 0:  # Si hay un pasillo en la fila inferior del pasillo principal
-            for room in rooms:
-                room_x, room_y, room_width, room_height = room
-                if room_x < x < room_x + room_width and room_y <= main_corridor_y + 3 < room_y + room_height:
-                    new_map[room_y - 1][x] = 0  # Conectar el pasillo arriba de la sala
-
-    return new_map
-
-# Generar el mapa con pasillo y salas
-map = generate_hospital_map(20, 25)
-
+# Crear la ventana
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("AI SMART AGENT")
 
+# Cargar el tileset después de crear la ventana
+tileset_image = pygame.image.load("assets/pokeballs.png").convert_alpha()
+
+# Mapa
+map = [
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 1, 1, 0, 0, 1, 0, 1],
+    [1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 1, 1, 1, 0, 1, 0, 1],
+    [1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 1, 0, 0, 1, 0, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+]
+
 # Posición inicial del jugador
-playerX = 1
-playerY = map.index(next(filter(lambda r: 0 in r, map)))  # Buscar la primera casilla vacía en Y
-player_pos = pygame.Vector2(playerX * blockSize + blockSize // 2, playerY * blockSize + blockSize // 2)
+coordX, coordY = (1, 1)
+player_pos = pygame.Vector2(coordX * blockSize, coordY * blockSize)
 
-# Generar la posición inicial del objeto (esfera)
-def generate_random_position():
+# Inicializar la posición del coleccionable
+def get_random_collectible_position():
     while True:
-        x = random.randint(1, 23)
-        y = random.randint(1, 18)
-        if map[y][x] == 0:  # Asegurarse de que sea una casilla vacía
-            return pygame.Vector2(x * blockSize + blockSize // 2, y * blockSize + blockSize // 2)
+        x = random.randint(1, 8)  # Coordenada x aleatoria
+        y = random.randint(1, 8)  # Coordenada y aleatoria
+        if map[y][x] == 0:  # Asegúrate de que es una posición válida
+            return x, y
 
-object_pos = generate_random_position()
+# Obtener un tile aleatorio del tileset
+def get_random_tile():
+    tile_x = random.randint(0, 3) * 94  # 4 tiles en el ancho del tileset
+    tile_y = random.randint(0, 3) * 94  # 4 tiles en la altura del tileset
+    return tileset_image.subsurface((tile_x, tile_y, 90, 90))
 
-# Función para dibujar el mapa con bordes
+# Inicializa la posición del coleccionable y el tile
+collectible_coordX, collectible_coordY = get_random_collectible_position()
+collectible_tile = get_random_tile()
+
+# Lista para almacenar los datos de movimiento
+movement_log = []
+
+# Función para dibujar el mapa
 def drawMap(map):
     for y, row in enumerate(map):
         for x, cell in enumerate(row):
-            rect = pygame.Rect(x * blockSize, y * blockSize, blockSize, blockSize)
             if cell == 1:
-                screen.blit(blackSquare, (x * blockSize, y * blockSize))
+                pygame.draw.rect(screen, BLACK, (x * blockSize, y * blockSize, blockSize, blockSize))
             else:
-                screen.blit(whiteSquare, (x * blockSize, y * blockSize))
-            pygame.draw.rect(screen, BORDER, rect, 2)  # Dibujar borde después de las imágenes
+                pygame.draw.rect(screen, WHITE, (x * blockSize, y * blockSize, blockSize, blockSize))
 
-# Función para dibujar el panel lateral
-def draw_panel():
-    panel_rect = pygame.Rect(WIDTH - PANEL_WIDTH, 0, PANEL_WIDTH, HEIGHT)
-    pygame.draw.rect(screen, PANEL_COLOR, panel_rect)  # Dibuja el panel
-    pygame.draw.rect(screen, BLACK, panel_rect, 3)  # Borde del panel
+# Función para verificar si el movimiento es válido
+def is_valid_move(nextX, nextY, map):
+    if 0 <= nextY < len(map) and 0 <= nextX < len(map[0]):
+        return map[nextY][nextX] == 0
+    return False
 
-    # Mostrar el texto del contador
-    text = font.render(f"Bolas: {balls_collected}", True, BLACK)
-    screen.blit(text, (WIDTH - PANEL_WIDTH + 20, 20))
+# Algoritmo A* y Heurística
+def heuristic(a, b):
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+def a_star(start, goal, map):
+    open_list = []
+    heapq.heappush(open_list, (0, start))
+    came_from = {}
+    cost_so_far = {}
+    came_from[start] = None
+    cost_so_far[start] = 0
+
+    # Variable para contar los costos
+    movement_log.clear()  # Limpiar el registro anterior
+    print("\nIniciando nuevo cálculo de costos:\n")
+    while open_list:
+        current_priority, current = heapq.heappop(open_list)
+
+        if current == goal:
+            break
+
+        # Posibles movimientos
+        neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        for dx, dy in neighbors:
+            next_node = (current[0] + dx, current[1] + dy)
+            if is_valid_move(next_node[0], next_node[1], map):
+                new_cost = cost_so_far[current] + 1
+                if next_node not in cost_so_far or new_cost < cost_so_far[next_node]:
+                    cost_so_far[next_node] = new_cost
+                    priority = new_cost + heuristic(next_node, goal)
+                    heapq.heappush(open_list, (priority, next_node))
+                    came_from[next_node] = current
+
+                    # Log the movement data
+                    movement_log.append((current, next_node, new_cost, priority))
+
+                    # Imprimir el costo (heurística) en la terminal
+                    print(f"Desde {current} hasta {next_node}, Costo acumulado: {new_cost}, Heurística: {priority}")
+
+    # Reconstruct path
+    current = goal
+    path = []
+    while current != start:
+        path.append(current)
+        current = came_from[current]
+    path.reverse()
+    return path
+
+# Function to display movement information
+def display_info(movement_log):
+    info_x_start = 820  # Starting x position for the info
+    y_offset = 20
+    screen.fill(BACKGROUND, (info_x_start, 0, WIDTH - 820, HEIGHT))  # Clear the info section
+
+    for i, (start, end, cost, heuristic) in enumerate(movement_log[-10:]):  # Show the last 10 moves
+        text = font.render(f"{start} -> {end} | Cost: {cost}, Heur: {heuristic}", True, TEXT_COLOR)
+        screen.blit(text, (info_x_start, y_offset * (i + 1)))
+
+# Movimiento del jugador
+def move_player(path):
+    global coordX, coordY, player_pos
+    if path:
+        next_step = path.pop(0)
+        coordX, coordY = next_step
+        player_pos.x = coordX * blockSize
+        player_pos.y = coordY * blockSize
+
+# Main game loop
+path_to_collectible = a_star((coordX, coordY), (collectible_coordX, collectible_coordY), map)
 
 while running:
     screen.fill(BACKGROUND)
     drawMap(map)
-    
+
+    # Dibujar el coleccionable usando el tile seleccionado
+    collectible_pos = (collectible_coordX * blockSize, collectible_coordY * blockSize)
+    screen.blit(collectible_tile, collectible_pos)
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    
-    # Dibuja al jugador (personaje más pequeño)
-    pygame.draw.circle(screen, RED, player_pos, 15)  # Hacer el círculo más pequeño
-    
-    # Dibuja el objeto (esfera)
-    pygame.draw.circle(screen, GREEN, object_pos, 15)
-    
-    # Dibuja el panel lateral
-    draw_panel()
-    
-    # Movimiento del jugador por casilla
-    keys = pygame.key.get_pressed()
-    
-    if keys[pygame.K_w] and map[int(playerY) - 1][int(playerX)] == 0:  # Mover hacia arriba si no es pared
-        playerY -= 1
-    if keys[pygame.K_s] and map[int(playerY) + 1][int(playerX)] == 0:  # Mover hacia abajo si no es pared
-        playerY += 1
-    if keys[pygame.K_a] and map[int(playerY)][int(playerX) - 1] == 0:  # Mover hacia la izquierda si no es pared
-        playerX -= 1
-    if keys[pygame.K_d] and map[int(playerY)][int(playerX) + 1] == 0:  # Mover hacia la derecha si no es pared
-        playerX += 1
 
-    # Actualizar la posición del jugador
-    player_pos = pygame.Vector2(playerX * blockSize + blockSize // 2, playerY * blockSize + blockSize // 2)
-    
-    # Verificar si el jugador ha tomado el objeto
-    if player_pos.distance_to(object_pos) < 30:  # Distancia mínima para tomar el objeto
-        object_pos = generate_random_position()  # Mover el objeto a una nueva posición
-        balls_collected += 1  # Incrementar el contador
-    
+    # Move player along the path to the collectible
+    move_player(path_to_collectible)
+
+    # Check if the player reached the collectible
+    if (coordX, coordY) == (collectible_coordX, collectible_coordY):
+        # Reposicionar el coleccionable y recalcular el path
+        collectible_coordX, collectible_coordY = get_random_collectible_position()
+        collectible_tile = get_random_tile()  # Cambia el tile solo al recoger
+        path_to_collectible = a_star((coordX, coordY), (collectible_coordX, collectible_coordY), map)
+
+    # Dibujar al jugador centrado en la celda
+    pygame.draw.circle(screen, "red", (int(player_pos.x + blockSize // 2), int(player_pos.y + blockSize // 2)), 20)
+
+    # Mostrar información de movimiento
+    display_info(movement_log)
+
     pygame.display.update()
-    dt = clock.tick(60) / 1000
-    time.sleep(0.1)  # Añadir un pequeño retardo para evitar que se mueva demasiado rápido
+    clock.tick(7)  # Acelerar el movimiento un poco para hacerlo visible
 
 pygame.quit()
