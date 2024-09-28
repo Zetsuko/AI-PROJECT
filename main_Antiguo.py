@@ -18,7 +18,6 @@ BACKGROUND = (200, 200, 200)
 TEXT_COLOR = (50, 50, 50)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
 
 blockSize = 40
 
@@ -47,18 +46,18 @@ map = [
     [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
     [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
     [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 2, 2, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1],
     [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 2, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
@@ -94,8 +93,6 @@ def drawMap(map):
         for x, cell in enumerate(row):
             if cell == 1:
                 pygame.draw.rect(screen, BLACK, (x * blockSize, y * blockSize, blockSize, blockSize))
-            elif cell == 2:
-                pygame.draw.rect(screen, BLUE, (x * blockSize, y * blockSize, blockSize, blockSize))
             else:
                 pygame.draw.rect(screen, WHITE, (x * blockSize, y * blockSize, blockSize, blockSize))
 
@@ -106,19 +103,6 @@ def drawMap(map, goal):
             rect = pygame.Rect(x * blockSize, y * blockSize, blockSize, blockSize)
             if cell == 1:
                 pygame.draw.rect(screen, BLACK, rect)  # Celda negra (muro)
-            elif cell == 2:
-                pygame.draw.rect(screen, BLUE, rect)  # Celda azul (charco)
-
-                # Calcular la heurística para la celda actual
-                heuristic_value = heuristic((x +1, y + 1), goal)
-
-                # Agregar el texto "2" (costo) en la esquina inferior izquierda de las celdas de camino
-                text_surface = font2.render("2", True, RED)
-                screen.blit(text_surface, (x * blockSize, y * blockSize + blockSize - 15))
-
-                # Agregar el valor de la heurística en la esquina inferior derecha
-                heuristic_surface = font2.render(str(heuristic_value), True, GREEN)
-                screen.blit(heuristic_surface, (x * blockSize + blockSize - 20, y * blockSize + blockSize - 15))
             else:
                 pygame.draw.rect(screen, WHITE, rect)  # Celda blanca (camino)
                 
@@ -139,22 +123,13 @@ def drawMap(map, goal):
 # Función para verificar si el movimiento es válido
 def is_valid_move(nextX, nextY, map):
     if 0 <= nextY < len(map) and 0 <= nextX < len(map[0]):
-        # Regresa True si es una celda de camino (0) o agua (2)
-        return map[nextY][nextX] in [0, 2]
+        return map[nextY][nextX] == 0
     return False
-
-# Función modificada para manejar diferentes costos según el tipo de celda
-def get_cost(current, next_node, map):
-    # Si la celda es agua (2), el costo es 2, de lo contrario es 1
-    if map[next_node[1]][next_node[0]] == 2:
-        return 2
-    return 1
 
 # Algoritmo A* y Heurística
 def heuristic(a, b):
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
-# Algoritmo A* modificado para tener en cuenta los costos de movimiento en función del tipo de terreno
 def a_star(start, goal, map):
     open_list = []
     heapq.heappush(open_list, (0, start))
@@ -163,9 +138,9 @@ def a_star(start, goal, map):
     came_from[start] = None
     cost_so_far[start] = 0
 
+    # Variable para contar los costos
     movement_log.clear()  # Limpiar el registro anterior
     print("\nIniciando nuevo cálculo de costos:\n")
-    
     while open_list:
         current_priority, current = heapq.heappop(open_list)
 
@@ -177,8 +152,7 @@ def a_star(start, goal, map):
         for dx, dy in neighbors:
             next_node = (current[0] + dx, current[1] + dy)
             if is_valid_move(next_node[0], next_node[1], map):
-                # Obtener el costo del movimiento basado en el tipo de celda
-                new_cost = cost_so_far[current] + get_cost(current, next_node, map)
+                new_cost = cost_so_far[current] + 1
                 if next_node not in cost_so_far or new_cost < cost_so_far[next_node]:
                     cost_so_far[next_node] = new_cost
                     priority = new_cost + heuristic(next_node, goal)
