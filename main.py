@@ -9,18 +9,21 @@ running = True
 clock = pygame.time.Clock()
 
 # DIMENSIONES DE LA VENTANA
-WIDTH, HEIGHT = 1080, 800  # Extiende el ancho para añadir el área de información
+WIDTH, HEIGHT = 1200, 800  # Extiende el ancho para añadir el área de información
 
 # COLORES
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 BACKGROUND = (200, 200, 200)
 TEXT_COLOR = (50, 50, 50)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
 
-blockSize = 80
+blockSize = 40
 
 # Fuente para mostrar información
-font = pygame.font.SysFont(None, 24)
+font = pygame.font.SysFont(None, 30)
+font2 = pygame.font.SysFont(None, 24)
 
 # Crear la ventana
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -29,19 +32,35 @@ pygame.display.set_caption("AI SMART AGENT")
 # Cargar el tileset después de crear la ventana
 tileset_image = pygame.image.load("assets/pokeballs.png").convert_alpha()
 
+# Cargar asset de agente
+agent_image = pygame.image.load("assets/agent.png").convert_alpha()
+agent_image = pygame.transform.scale(agent_image, (45, 45))  # Escalar al tamaño del bloque
+
+
 # Mapa
 map = [
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 1, 1, 0, 0, 1, 0, 1],
-    [1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 1, 1, 1, 0, 1, 0, 1],
-    [1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 1, 0, 0, 1, 0, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
+
 
 # Posición inicial del jugador
 coordX, coordY = (1, 1)
@@ -57,9 +76,9 @@ def get_random_collectible_position():
 
 # Obtener un tile aleatorio del tileset
 def get_random_tile():
-    tile_x = random.randint(0, 3) * 94  # 4 tiles en el ancho del tileset
-    tile_y = random.randint(0, 3) * 94  # 4 tiles en la altura del tileset
-    return tileset_image.subsurface((tile_x, tile_y, 90, 90))
+    tile_x = random.randint(0, 3) * 45  # 4 tiles en el ancho del tileset
+    tile_y = random.randint(0, 3) * 45  # 4 tiles en la altura del tileset
+    return tileset_image.subsurface((tile_x, tile_y, 45, 45))
 
 # Inicializa la posición del coleccionable y el tile
 collectible_coordX, collectible_coordY = get_random_collectible_position()
@@ -76,6 +95,30 @@ def drawMap(map):
                 pygame.draw.rect(screen, BLACK, (x * blockSize, y * blockSize, blockSize, blockSize))
             else:
                 pygame.draw.rect(screen, WHITE, (x * blockSize, y * blockSize, blockSize, blockSize))
+
+# Función para dibujar el mapa con bordes en las celdas, el costo y la heurística
+def drawMap(map, goal):
+    for y, row in enumerate(map):
+        for x, cell in enumerate(row):
+            rect = pygame.Rect(x * blockSize, y * blockSize, blockSize, blockSize)
+            if cell == 1:
+                pygame.draw.rect(screen, BLACK, rect)  # Celda negra (muro)
+            else:
+                pygame.draw.rect(screen, WHITE, rect)  # Celda blanca (camino)
+                
+                # Calcular la heurística para la celda actual
+                heuristic_value = heuristic((x, y), goal)
+
+                # Agregar el texto "1" (costo) en la esquina inferior izquierda de las celdas de camino
+                text_surface = font2.render("1", True, RED)
+                screen.blit(text_surface, (x * blockSize, y * blockSize + blockSize - 15))
+
+                # Agregar el valor de la heurística en la esquina inferior derecha
+                heuristic_surface = font2.render(str(heuristic_value), True, GREEN)
+                screen.blit(heuristic_surface, (x * blockSize + blockSize - 20, y * blockSize + blockSize - 15))
+
+            # Agregar el borde
+            pygame.draw.rect(screen, (100, 100, 100), rect, 2)  # Borde gris oscuro
 
 # Función para verificar si el movimiento es válido
 def is_valid_move(nextX, nextY, map):
@@ -155,10 +198,10 @@ path_to_collectible = a_star((coordX, coordY), (collectible_coordX, collectible_
 
 while running:
     screen.fill(BACKGROUND)
-    drawMap(map)
+    drawMap(map, (collectible_coordX, collectible_coordY))  # Pasar la posición del coleccionable
 
     # Dibujar el coleccionable usando el tile seleccionado
-    collectible_pos = (collectible_coordX * blockSize, collectible_coordY * blockSize)
+    collectible_pos = (collectible_coordX * blockSize + (blockSize - 45) // 2, collectible_coordY * blockSize + (blockSize - 45) // 2)
     screen.blit(collectible_tile, collectible_pos)
 
     for event in pygame.event.get():
@@ -175,8 +218,8 @@ while running:
         collectible_tile = get_random_tile()  # Cambia el tile solo al recoger
         path_to_collectible = a_star((coordX, coordY), (collectible_coordX, collectible_coordY), map)
 
-    # Dibujar al jugador centrado en la celda
-    pygame.draw.circle(screen, "red", (int(player_pos.x + blockSize // 2), int(player_pos.y + blockSize // 2)), 20)
+    # Dibujar al jugador centrado en la celda usando la imagen del agente
+    screen.blit(agent_image, player_pos)
 
     # Mostrar información de movimiento
     display_info(movement_log)
